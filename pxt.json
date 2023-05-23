@@ -1,0 +1,20 @@
+{
+    "name": "pxt-Cloudlet-AI",
+    "description": "An extension for Cloudlet AI",
+    "version": "0.1.0",
+    "dependencies": {
+      "core": "*"
+    },
+    "files": [
+      "main.ts",
+      "README.md"
+    ],
+    "targetVersions": {
+      "target": "5.0.12",
+      "targetId": "microbit"
+    },
+    "supportedTargets": [
+      "microbit"
+    ],
+    "preferredEditor": "tsprj"
+  }

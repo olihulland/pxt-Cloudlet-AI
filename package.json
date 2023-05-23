@@ -1,0 +1,9 @@
+{
+  "name": "pxt-Cloudlet-AI",
+  "version": "1.0.0",
+  "description": "MakeCode Extension for Cloudlet Micro:bits",
+  "main": "main.ts",
+  "repository": "git@github.com:olihulland/pxt-Cloudlet-AI.git",
+  "author": "Oliver Hulland <olihulland@gmail.com>",
+  "license": "MIT"
+}
