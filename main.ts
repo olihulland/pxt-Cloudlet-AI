@@ -85,18 +85,17 @@ namespace cloudlet {
             basic.clearScreen();
         }
 
+        private onStartRecording: ()=>void = ()=>null;
+        private onFinishedRecording: ()=>void = ()=>null;
+
         private constructor() {
             this.radioReceiver = RadioReceiver.getRadioReceiver();
             this.radioReceiver.initialise(this.onIdent)
         }
 
-        private sendHandshake(recordID: string) {
-            let message = "HS" + deviceID + ","  + recordID;
+        private sendHandshake(classification: number) {
+            let message = "HS" + deviceID + ","  + classification;
             radio.sendString(message);
-        }
-
-        private sendClass(classification: number | undefined) {
-            radio.sendString(this.hsID + "cl:" + classification.toString());
         }
 
         private sendJSON(json: string) {
@@ -144,34 +143,51 @@ namespace cloudlet {
         }
 
         sendStream(duration: number, classification: number) {
-            this.radioReceiver.setOnHandshake((hsID: string) => {
+            this.radioReceiver.setOnHandshake((hsID: string) => {       
                 this.hsID = hsID;
-                this.sendClass(classification);
 
                 const pauseLen = 5;
                 let startTime = input.runningTime();
                 let tally = 0;
                 this.seqNum = 0;
 
+                this.onStartRecording();
                 while (input.runningTime() - startTime < (duration*1000)) {
                     tally++;
                     this.dataSender(tally);
                     pause(pauseLen);
                 }
-
+                this.onFinishedRecording();
                 this.sendTerminate();
             });
 
-            const recordID = input.runningTime();
-            this.sendHandshake(recordID.toString())
+            this.sendHandshake(classification)
+        }
+
+        setOnStartRecording(handler: ()=>void) {
+            this.onStartRecording = handler;
+        }
+
+        setOnFinishedRecording(handler: ()=>void) {
+            this.onFinishedRecording = handler;
         }
     }
 
     /* --- BLOCKS --- */
-    //% block="setup this micro:bit for cloudlet"
-    export function initialise() {
-        radio.setGroup(33);
+    //% block="connect with cloudlet on $radioGroup"
+    //% radioGroup.defl=33
+    export function initialise(radioGroup: number) {
+        radio.setGroup(radioGroup);
         Controller.getController();
+    }
+
+    //% block="setup for accelerometer streaming"
+    export function setupForAccel() {
+        const controller = Controller.getController();
+        setDataStructure(DataKey.x, DataKey.y, DataKey.z, DataKey.s);
+        onSendDataPoint((n: number) => {
+            sendDataPoint(n, createDataPoint(input.acceleration(Dimension.X),input.acceleration(Dimension.Y),input.acceleration(Dimension.Z),input.acceleration(Dimension.Strength)))
+        })
     }
 
     //% draggableParameters="reporter"
@@ -229,4 +245,15 @@ namespace cloudlet {
         controller.sendStream(duration, classification);
     }
 
+    //% block="on start recording"
+    export function onStartRecording(handler: ()=>void) {
+        const controller = Controller.getController();
+        controller.setOnStartRecording(handler);
+    }
+
+    //% block="on finished recording"
+    export function onFinishedRecording(handler: ()=>void) {
+        const controller = Controller.getController();
+        controller.setOnFinishedRecording(handler);
+    }
 }
